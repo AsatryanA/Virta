@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-repeat: repeat;
+            background-size: cover;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container mt-2 p-3 bg-dark">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="text-center">Add Station</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="name">Enter name</label>
+                        <input required="true" type="text" class="form-control mt-2 " id="name" placeholder="Tesla">
+                        <label for="name">Enter latitude</label>
+                        <input type="text" class="form-control" id="latitude" placeholder="40.257914" required>
+                        <label for="name">Enter longitude</label>
+                        <input type="text" class="form-control" id="longitude" placeholder="44.257914" required>
+                        <label for="name">Enter company id</label>
+                        <input type="test" class="form-control" id="companyId" placeholder="10" required>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-primary float-right" onclick="submitForm()">submit</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="text-center">Find Location</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="name" class="mt-3">Enter Your latitude</label>
+                            <input type="text" class="form-control" id="yourLatitude" placeholder="40.257914">
+                            <label for="name" class="mt-3">Enter Your longitude</label>
+                            <input type="text" class="form-control" id="yourLongitude" placeholder="44.257914">
+                            <label for="name" class="mt-3">Enter Radius (km)</label>
+                            <input type="test" class="form-control" id="distance" placeholder="10">
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary float-right" onclick="getLocation()">submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <table class="table table-bordered text-white text-center">
+                <thead>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Company</th>
+                <th>Edit</th>
+                <th>Delete</th>
+                </thead>
+                <tbody id="tbData">
+                </tbody>
+                <div>
+                    <div class="container">
+                        <div class="row mt-2">
+                            <input type="text" class="col-md-2" id="id" placeholder="1"/>
+                            <input type="button" value="Get By Id" onclick="getDataById()" class="btn btn-primary"/>
+                            <input type="button" value="Get All" onclick="getData()" class="btn btn-primary"/>
+                        </div>
+                        <div class="row mt-2">
+                            <input type="text" class="col-md-2  p-1 " id="company_id" placeholder="1"/>
+                            <input type="button" value="Get By Company Id " onclick="getByCompanyId()"
+                                   class="btn btn-primary"/>
+                        </div>
+                    </div>
+                </div>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+
+    var editFormData;
+
+    function getFormData() {
+        return {
+            name: document.getElementById("name").value,
+            latitude: document.getElementById("latitude").value,
+            longitude: document.getElementById("longitude").value,
+            companyId: document.getElementById("companyId").value,
+        }
+    }
+
+    function getLocationData() {
+        return {
+            latitude: document.getElementById("yourLatitude").value,
+            longitude: document.getElementById("yourLongitude").value,
+            distance: document.getElementById("distance").value,
+
+        }
+    }
+
+    function setCompanyName() {
+        return {
+            company: [{name: ""}]
+        }
+    }
+
+    function clearFormData() {
+        document.getElementById("name").value = "";
+        document.getElementById("latitude").value = "";
+        document.getElementById("longitude").value = "";
+        document.getElementById("companyId").value = "";
+    }
+
+    function setFormData(name, latitude, longitude) {
+        document.getElementById("name").value = name;
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+    }
+
+    function submitForm() {
+        if (!editFormData) addStation();
+        else {
+            editData();
+            editFormData = null
+        }
+    }
+
+    function addStation() {
+        let payload = getFormData();
+        fetch("http://localhost:8080/api/station", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }).then((res) => res.json()).then((response) => {
+            clearFormData();
+            getData();
+        })
+    }
+
+    function editDataCall(id) {
+        fetch("http://localhost:8080/api/station/" + id, {
+            method: "GET"
+        }).then((res) => res.json()).then((response) => {
+            editFormData = response;
+            setFormData(response.name, response.latitude, response.longitude)
+        })
+    }
+
+    function editData() {
+        var formData = getFormData();
+        fetch("http://localhost:8080/api/station/" + editFormData.id, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        }).then((res) => res.json()).then((response) => {
+            clearFormData();
+            getData()
+        })
+    }
+
+    function deleteData(id) {
+        fetch("http://localhost:8080/api/station?id=" + id, {
+            method: "delete"
+        }).then(getData)
+    }
+
+    function getData() {
+        fetch("http://localhost:8080/api/station").then(
+            (res) => res.json()
+        ).then((response) => {
+            var temp = "";
+            response.forEach((station) => {
+                temp += "<tr>" + setResponseData(temp, station) + "</tr>";
+            })
+            document.getElementById("tbData").innerHTML = temp;
+        })
+    }
+
+    function getLocation() {
+        let payload = getLocationData();
+        fetch("http://localhost:8080/api/station/location", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }).then(
+            (res) => res.json()
+        ).then((response) => {
+            var temp = "";
+            response.forEach((station) => {
+                temp += "<tr>" + setResponseData(temp, station) + "</tr>";
+            })
+            document.getElementById("tbData").innerHTML = temp;
+        })
+    }
+
+    function getDataById() {
+        let id = document.getElementById("id").value
+        fetch("http://localhost:8080/api/station/" + id, {
+            method: "GET",
+        }).then(
+            (res) => res.json()
+        ).then((station) => {
+            var temp = ""
+            document.getElementById("tbData").innerHTML = setResponseData(temp, station);
+        })
+    }
+
+    function setResponseData(temp, station) {
+        temp = "<tr>" +
+            "<td>" + station.id + "</td>" +
+            "<td>" + station.name + "</td>" +
+            "<td>" + station.latitude + "</td>" +
+            "<td>" + station.longitude + "</td>" +
+            "<td>" + station.company.name + "</td>" +
+            "<td><button class='btn btn-primary' onclick='editDataCall(`" + station.id + "`)'>Edit</button></td>" +
+            "<td><button class='btn btn-danger' onclick='deleteData(`" + station.id + "`)'>Delete</button></td>" +
+            "</tr>";
+        return temp;
+    }
+
+    function getByCompanyId() {
+        let id = document.getElementById("company_id").value
+        fetch("http://localhost:8080/api/station/all/" + id, {
+            method: "GET",
+        }).then(
+            (res) => res.json()
+        ).then((response) => {
+            var temp = ""
+            response.forEach((station) => {
+                temp += "<tr>" + setResponseData(temp, station) + "</tr>";
+            })
+            document.getElementById("tbData").innerHTML = temp;
+        })
+    }
+
+    getData();
+</script>
+</body>
+</html>
